@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
@@ -15,19 +15,47 @@ let collection;
 async function run() {
   try {
     await client.connect();
-    collection = client.db(process.env.DB_NAME).collection('images');
+    collection = client.db(process.env.DB_NAME).collection("images");
     await client.db(process.env.DB_NAME).command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // await client.close();
   }
 }
 run().catch(console.dir);
 
-router.get('/', async (req, res) => {
+router
+  .get("/", async (req, res) => {
     const result = await collection.find({}).toArray();
-    console.log(result);
-    res.status(200).send('Image Gallery');
-})
+    res.status(200).send(result);
+  })
+  .post("/", async (req, res) => {
+    try {
+      const { name, data, size, mimetype } = req?.files?.file;
+      const slNo = parseInt(req.body.slNo);
+      const encImg = data.toString("base64");
+      const image = {
+        slNo: slNo,
+        name: name.split('.')[0],
+        imgData: {
+          img: Buffer.from(encImg, "base64"),
+          type: mimetype,
+          size,
+        }
+      }
+
+      const result = await collection.insertOne(image);
+
+      if(result.acknowledged){
+        res.status(201).send('Image Uploaded Successfully');
+      } else{
+        res.status(400).send('Image not Uploaded');
+      }
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  });
 
 module.exports = router;
