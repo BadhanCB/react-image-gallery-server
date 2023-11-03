@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tinfh.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -56,6 +56,20 @@ router
     } catch (error) {
       res.status(500).send(error);
     }
-  });
+  })
+  .delete('/', async (req, res) => {
+    try {
+      let imgIds = req.body;
+      imgIds = imgIds.map(id => ObjectId(id));
+      const result = await collection.deleteMany({ _id: { $in: imgIds }});
+      if(result.deletedCount){
+        res.status(202).send({message: 'Image Deleted SuccessFully'});
+      }  else{
+        res.status(404).send({message: 'Image Not Found'});
+      }
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  })
 
 module.exports = router;
