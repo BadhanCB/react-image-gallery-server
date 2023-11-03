@@ -28,7 +28,7 @@ run().catch(console.dir);
 
 router
   .get("/", async (req, res) => {
-    const result = await collection.find({}).toArray();
+    const result = await collection.find({}).sort({id: 1}).toArray();
     res.status(200).send(result);
   })
   .post("/", async (req, res) => {
