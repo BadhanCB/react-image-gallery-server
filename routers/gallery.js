@@ -33,7 +33,7 @@ router
       const result = await collection.find({}).sort({ id: 1 }).toArray();
       res.status(200).send(result);
     } catch (error) {
-      res.status(400).send({message: 'Failed to get Data'});
+      res.status(400).send({ message: "Failed to get Data" });
     }
   })
   .post("/", async (req, res) => {
@@ -46,7 +46,7 @@ router
         .resize(200)
         .toFormat("webp")
         .toBuffer()
-        .then(data => img = data);
+        .then((data) => (img = data));
 
       const encImg = img.toString("base64");
       const image = {
@@ -54,19 +54,17 @@ router
         name: name.split(".")[0],
         imgData: {
           img: Buffer.from(encImg, "base64"),
-          type: 'image/webp',
+          type: "image/webp",
           size,
         },
       };
 
-      console.log(image)
-
       const result = await collection.insertOne(image);
 
       if (result.acknowledged) {
-        res.status(201).send("Image Uploaded Successfully");
+        res.status(201).send({ message: "Image Uploaded Successfully" });
       } else {
-        res.status(400).send("Image not Uploaded");
+        res.status(400).send({ message: "Image not Uploaded" });
       }
     } catch (error) {
       res.status(500).send(error);
@@ -77,12 +75,12 @@ router
       let imgIds = req.body;
       imgIds = imgIds.map((id) => ObjectId(id));
       const result = await collection.deleteMany({ _id: { $in: imgIds } });
-      
+
       const existingData = await collection.find({}).sort({ id: 1 }).toArray();
       const bulk = collection.initializeOrderedBulkOp();
       existingData.forEach((data, i) => {
-        bulk.find({ _id: data._id}).updateOne({ $set: { id: i+1 }});
-      })
+        bulk.find({ _id: data._id }).updateOne({ $set: { id: i + 1 } });
+      });
       bulk.execute();
 
       if (result.deletedCount) {
@@ -91,7 +89,7 @@ router
         res.status(404).send({ message: "Image Not Found" });
       }
     } catch (error) {
-      res.status(500).send(error);
+      res.status(500).send({ message: "Failed to delete" });
     }
   });
 
