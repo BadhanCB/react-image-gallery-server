@@ -29,8 +29,12 @@ run().catch(console.dir);
 
 router
   .get("/", async (req, res) => {
-    const result = await collection.find({}).sort({ id: 1 }).toArray();
-    res.status(200).send(result);
+    try {
+      const result = await collection.find({}).sort({ id: 1 }).toArray();
+      res.status(200).send(result);
+    } catch (error) {
+      res.status(400).send({message: 'Failed to get Data'});
+    }
   })
   .post("/", async (req, res) => {
     try {
@@ -73,6 +77,14 @@ router
       let imgIds = req.body;
       imgIds = imgIds.map((id) => ObjectId(id));
       const result = await collection.deleteMany({ _id: { $in: imgIds } });
+      
+      const existingData = await collection.find({}).sort({ id: 1 }).toArray();
+      const bulk = collection.initializeOrderedBulkOp();
+      existingData.forEach((data, i) => {
+        bulk.find({ _id: data._id}).updateOne({ $set: { id: i+1 }});
+      })
+      bulk.execute();
+
       if (result.deletedCount) {
         res.status(202).send({ message: "Image Deleted SuccessFully" });
       } else {
