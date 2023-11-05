@@ -89,11 +89,14 @@ router
       updatedData.forEach((data) => {
         bulk.find({ _id: ObjectId(data._id) }).updateOne({ $set: { id: data.id } });
       });
-      await bulk.execute();
-
-      res.status(202).send({ message: "Image SuccessFully Updated" });
+      const result = await bulk.execute();
+      if(result.ok){
+        res.status(202).send({ message: "Image SuccessFully Updated" });
+      } else {
+        res.status(500).send({ message: "Failed to Update" });
+      }
     } catch (error) {
-      res.status(500).send({ message: "Failed to delete" });
+      res.status(500).send({ message: "Failed to Update" });
     }
   })
   /**
